@@ -1,0 +1,32 @@
+{
+  "name": "phrb-template",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun server/index.ts",
+    "dev": "bun --watch server/index.ts",
+    "prod": "pm2 start --interpreter ~/.bun/bin/bun server/index.ts",
+    "kill": "pm2 delete server/index.ts"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/bun": "latest",
+    "@types/pg": "^8.11.10",
+    "drizzle-kit": "^0.26.2",
+    "tsx": "^4.19.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.4.1",
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.35.2",
+    "drizzle-zod": "^0.5.1",
+    "hono": "^4.6.5",
+    "pg": "^8.13.0",
+    "postgres": "^3.4.4",
+    "zod": "^3.23.8"
+  }
+}
