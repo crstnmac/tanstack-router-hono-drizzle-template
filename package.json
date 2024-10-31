@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "start": "bun server/index.ts",
-    "dev": "bun --watch server/index.ts",
+    "dev": "bun run --hot server/index.ts",
     "prod": "pm2 start --interpreter ~/.bun/bin/bun server/index.ts",
     "kill": "pm2 delete server/index.ts"
   },
@@ -12,21 +12,23 @@
     "@types/bcrypt": "^5.0.2",
     "@types/bun": "latest",
     "@types/pg": "^8.11.10",
-    "drizzle-kit": "^0.26.2",
-    "tsx": "^4.19.1"
+    "drizzle-kit": "^0.27.0",
+    "tsx": "^4.19.2"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.4.1",
+    "@oslojs/crypto": "^1.0.1",
+    "@oslojs/encoding": "^1.1.0",
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",
-    "drizzle-orm": "^0.35.2",
+    "drizzle-orm": "^0.36.0",
     "drizzle-zod": "^0.5.1",
-    "hono": "^4.6.5",
-    "pg": "^8.13.0",
-    "postgres": "^3.4.4",
+    "hono": "^4.6.8",
+    "pg": "^8.13.1",
+    "postgres": "^3.4.5",
     "zod": "^3.23.8"
   }
 }

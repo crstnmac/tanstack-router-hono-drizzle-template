@@ -1,7 +1,7 @@
 import {Pool} from 'pg'
-import {config} from '../config'
+import {config} from '@/config'
 import {drizzle} from 'drizzle-orm/node-postgres'
-import schema from './schema'
+import * as schema from './schema'
 
 const pool = new Pool({
   host: config.postgresql.host,

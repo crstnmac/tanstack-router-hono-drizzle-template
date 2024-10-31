@@ -1,15 +1,15 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"],
-      "@server/*":["../server/*"]
-    },
     "strict": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "Bundler"
+    "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@/shared/*": ["../shared/*"],
+      "@/*": ["./src/*"]
+    }
   }
 }

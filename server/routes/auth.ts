@@ -1,127 +1,158 @@
 import {Hono} from 'hono'
-import {config} from '../config'
-import bcrypt from 'bcrypt'
 import {zValidator} from '@hono/zod-validator'
-import {createUserSchema} from './users'
-import {db} from '../db'
-import {users} from '../db/schema'
 import {eq} from 'drizzle-orm'
-import {Jwt} from 'hono/utils/jwt'
-import {getCookie, setCookie} from 'hono/cookie'
+import {
+  createSession,
+  generateSessionToken,
+  invalidateSession,
+} from '@/utils/authUtils'
+import {userTable} from '@/db/schema'
+import {db} from '@/db'
+import {loginSchema, registerSchema, type SuccessResponse} from '@/shared/types'
+import {deleteCookie, setCookie} from 'hono/cookie'
+import postgres from 'postgres'
+import {HTTPException} from 'hono/http-exception'
+import type {Context} from '@/context'
+import {loggedIn} from '@/middleware/loggedIn'
+import {config} from '@/config'
 
-const JWT_OPTIONS = {
-  expiresIn: config.jwt.accessExpirationMinutes,
-  httpOnly: true,
-  secure: config.env === 'production',
-  sameSite: 'Lax' as const,
-  path: '/',
-}
+export const authRouter = new Hono<Context>()
+  .post('/signup', zValidator('form', registerSchema), async (c) => {
+    const {username, name, email, password} = c.req.valid('form')
 
-async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10)
-}
+    const passwordHash = await Bun.password.hash(password) // Use Bun for hashing
 
-async function verifyPassword(
-  password: string,
-  hash: string
-): Promise<boolean> {
-  return bcrypt.compare(password, hash)
-}
+    try {
+      const res = await db
+        .insert(userTable)
+        .values({
+          username,
+          name,
+          email,
+          password: passwordHash,
+        })
+        .returning()
 
-export const authRoutes = new Hono()
-  .post('/register', zValidator('form', createUserSchema), async (c) => {
-    const {name, email, password, role} = await c.req.valid('form')
+      const token = generateSessionToken()
 
-    const user = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1)
+      const session = await createSession(token, res[0].id)
 
-    if (user.length) {
-      return c.json({message: 'User already exists'}, 400)
+      setCookie(c, 'session', token, {
+        httpOnly: true,
+        secure: config.env === 'production',
+        sameSite: 'Lax',
+        expires: session.expiresAt,
+        path: '/',
+      })
+
+      c.set('user', res[0])
+      c.set('session', session)
+
+      return c.json<SuccessResponse>(
+        {
+          message: 'User created',
+          success: true,
+        },
+        201
+      )
+    } catch (error) {
+      if (error instanceof postgres.PostgresError && error.code === '23505') {
+        throw new HTTPException(409, {
+          message: 'User already exists',
+        })
+      }
+      console.log(error)
+      throw new HTTPException(500, {
+        message: 'Failed to create User',
+      })
     }
-
-    const hashedPassword = await hashPassword(password)
-
-    const result = await db
-      .insert(users)
-      .values({name, email, password: hashedPassword, role})
-      .returning()
-
-    return c.json(
-      {
-        message: 'User created',
-        user: result[0],
-      },
-      201
-    )
   })
   .post(
     '/login',
-    zValidator(
-      'form',
-      createUserSchema.pick({email: true, password: true}),
-      (result, c) => {
-        if (!result.success) {
-          c.json({message: 'Invalid email or password'}, 400)
-        }
+    zValidator('form', loginSchema, (result, c) => {
+      if (!result.success) {
+        c.json({message: 'Invalid username or password'}, 400)
       }
-    ),
+    }),
     async (c) => {
       const {email, password} = await c.req.valid('form')
-      const user = await db
+
+      const [existingUser] = await db
         .select()
-        .from(users)
-        .where(eq(users.email, email))
+        .from(userTable)
+        .where(eq(userTable.email, email))
         .limit(1)
-      if (!user.length) {
-        return c.json({message: 'User not found please signup'}, 400)
+
+      if (!existingUser) {
+        throw new HTTPException(401, {
+          message: 'Incorrect username or password',
+        })
       }
 
-      const isValid = await verifyPassword(password, user[0].password)
-      if (!isValid) {
-        return c.json({message: 'Invalid email or password'}, 400)
-      }
-
-      const token = await Jwt.sign(
-        {
-          id: user[0].id,
-          email: user[0].email,
-          role: user[0].role,
-        },
-        config.jwt.secret
+      const validPassword = await Bun.password.verify(
+        password,
+        existingUser.password
       )
 
-      setCookie(c, 'token', token, JWT_OPTIONS)
-      return c.json(
+      if (!validPassword) {
+        throw new HTTPException(401, {
+          message: 'Incorrect password',
+        })
+      }
+
+      const token = generateSessionToken()
+
+      const session = await createSession(token, existingUser.id)
+
+      console.log('session', session)
+      console.log('token', token)
+
+      setCookie(c, 'session', token, {
+        httpOnly: true,
+        secure: config.env === 'production',
+        sameSite: 'Lax',
+        expires: session.expiresAt,
+        path: '/',
+      })
+
+      c.set('user', existingUser)
+      c.set('session', session)
+
+      return c.json<SuccessResponse>(
         {
-          message: 'Login successful',
-          user: {
-            id: user[0].id,
-            name: user[0].name,
-            email: user[0].email,
-            role: user[0].role,
-          },
+          message: 'Logged In',
+          success: true,
         },
         200
       )
     }
   )
-  .post('/logout', async (c) => {
-    setCookie(c, 'token', '', {...JWT_OPTIONS, maxAge: 0})
-    return c.json({message: 'Logout successful'})
-  })
-  .get('/check-auth', async (c) => {
-    const token = getCookie(c, 'token')
-    if (!token) {
-      return c.json({message: 'Not authenticated'}, 401)
+  .get('/logout', async (c) => {
+    const session = c.get('session')
+    if (!session) {
+      return c.redirect('/')
     }
 
-    try {
-      const payload = await Jwt.verify(token, config.jwt.secret)
-      return c.json({message: 'Authenticated', user: payload}, 200)
-    } catch (error) {
-      return c.json({message: 'Not authenticated', user: null}, 401)
-    }
+    invalidateSession(session.id)
+    deleteCookie(c, 'session')
+
+    return c.redirect('/')
+  })
+  .get('/user', loggedIn, async (c) => {
+    const user = c.get('user')!
+    return c.json<
+      SuccessResponse<{
+        email: string
+        name: string
+        username: string
+      }>
+    >({
+      success: true,
+      data: {
+        username: user.username,
+        name: user.name,
+        email: user.email,
+      },
+      message: 'User found',
+    })
   })

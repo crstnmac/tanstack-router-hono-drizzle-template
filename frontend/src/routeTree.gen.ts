@@ -11,117 +11,224 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as RegisterImport } from './routes/register'
-import { Route as LoginImport } from './routes/login'
-import { Route as AboutImport } from './routes/about'
-import { Route as IndexImport } from './routes/index'
+import { Route as LayoutImport } from './routes/_layout'
+import { Route as LayoutIndexImport } from './routes/_layout/index'
+import { Route as AuthRegisterImport } from './routes/auth/register'
+import { Route as AuthLoginImport } from './routes/auth/login'
+import { Route as LayoutReportsImport } from './routes/_layout/reports'
+import { Route as LayoutPropertiesImport } from './routes/_layout/properties'
+import { Route as LayoutClientsImport } from './routes/_layout/clients'
+import { Route as LayoutCalendarImport } from './routes/_layout/calendar'
 
 // Create/Update Routes
 
-const RegisterRoute = RegisterImport.update({
-  id: '/register',
-  path: '/register',
+const LayoutRoute = LayoutImport.update({
+  id: '/_layout',
   getParentRoute: () => rootRoute,
 } as any)
 
-const LoginRoute = LoginImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const AboutRoute = AboutImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const IndexRoute = IndexImport.update({
+const LayoutIndexRoute = LayoutIndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const AuthRegisterRoute = AuthRegisterImport.update({
+  id: '/auth/register',
+  path: '/auth/register',
   getParentRoute: () => rootRoute,
+} as any)
+
+const AuthLoginRoute = AuthLoginImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const LayoutReportsRoute = LayoutReportsImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutPropertiesRoute = LayoutPropertiesImport.update({
+  id: '/properties',
+  path: '/properties',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutClientsRoute = LayoutClientsImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutCalendarRoute = LayoutCalendarImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => LayoutRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_layout': {
+      id: '/_layout'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof LayoutImport
+      parentRoute: typeof rootRoute
+    }
+    '/_layout/calendar': {
+      id: '/_layout/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof LayoutCalendarImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/clients': {
+      id: '/_layout/clients'
+      path: '/clients'
+      fullPath: '/clients'
+      preLoaderRoute: typeof LayoutClientsImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/properties': {
+      id: '/_layout/properties'
+      path: '/properties'
+      fullPath: '/properties'
+      preLoaderRoute: typeof LayoutPropertiesImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/reports': {
+      id: '/_layout/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof LayoutReportsImport
+      parentRoute: typeof LayoutImport
+    }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginImport
+      parentRoute: typeof rootRoute
+    }
+    '/auth/register': {
+      id: '/auth/register'
+      path: '/auth/register'
+      fullPath: '/auth/register'
+      preLoaderRoute: typeof AuthRegisterImport
+      parentRoute: typeof rootRoute
+    }
+    '/_layout/': {
+      id: '/_layout/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutImport
-      parentRoute: typeof rootRoute
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginImport
-      parentRoute: typeof rootRoute
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof LayoutIndexImport
+      parentRoute: typeof LayoutImport
     }
   }
 }
 
 // Create and export the route tree
 
+interface LayoutRouteChildren {
+  LayoutCalendarRoute: typeof LayoutCalendarRoute
+  LayoutClientsRoute: typeof LayoutClientsRoute
+  LayoutPropertiesRoute: typeof LayoutPropertiesRoute
+  LayoutReportsRoute: typeof LayoutReportsRoute
+  LayoutIndexRoute: typeof LayoutIndexRoute
+}
+
+const LayoutRouteChildren: LayoutRouteChildren = {
+  LayoutCalendarRoute: LayoutCalendarRoute,
+  LayoutClientsRoute: LayoutClientsRoute,
+  LayoutPropertiesRoute: LayoutPropertiesRoute,
+  LayoutReportsRoute: LayoutReportsRoute,
+  LayoutIndexRoute: LayoutIndexRoute,
+}
+
+const LayoutRouteWithChildren =
+  LayoutRoute._addFileChildren(LayoutRouteChildren)
+
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/login': typeof LoginRoute
-  '/register': typeof RegisterRoute
+  '': typeof LayoutRouteWithChildren
+  '/calendar': typeof LayoutCalendarRoute
+  '/clients': typeof LayoutClientsRoute
+  '/properties': typeof LayoutPropertiesRoute
+  '/reports': typeof LayoutReportsRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/': typeof LayoutIndexRoute
 }
 
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/login': typeof LoginRoute
-  '/register': typeof RegisterRoute
+  '/calendar': typeof LayoutCalendarRoute
+  '/clients': typeof LayoutClientsRoute
+  '/properties': typeof LayoutPropertiesRoute
+  '/reports': typeof LayoutReportsRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/': typeof LayoutIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/login': typeof LoginRoute
-  '/register': typeof RegisterRoute
+  '/_layout': typeof LayoutRouteWithChildren
+  '/_layout/calendar': typeof LayoutCalendarRoute
+  '/_layout/clients': typeof LayoutClientsRoute
+  '/_layout/properties': typeof LayoutPropertiesRoute
+  '/_layout/reports': typeof LayoutReportsRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/_layout/': typeof LayoutIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/login' | '/register'
+  fullPaths:
+    | ''
+    | '/calendar'
+    | '/clients'
+    | '/properties'
+    | '/reports'
+    | '/auth/login'
+    | '/auth/register'
+    | '/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/login' | '/register'
-  id: '__root__' | '/' | '/about' | '/login' | '/register'
+  to:
+    | '/calendar'
+    | '/clients'
+    | '/properties'
+    | '/reports'
+    | '/auth/login'
+    | '/auth/register'
+    | '/'
+  id:
+    | '__root__'
+    | '/_layout'
+    | '/_layout/calendar'
+    | '/_layout/clients'
+    | '/_layout/properties'
+    | '/_layout/reports'
+    | '/auth/login'
+    | '/auth/register'
+    | '/_layout/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
-  LoginRoute: typeof LoginRoute
-  RegisterRoute: typeof RegisterRoute
+  LayoutRoute: typeof LayoutRouteWithChildren
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthRegisterRoute: typeof AuthRegisterRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
-  LoginRoute: LoginRoute,
-  RegisterRoute: RegisterRoute,
+  LayoutRoute: LayoutRouteWithChildren,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthRegisterRoute: AuthRegisterRoute,
 }
 
 export const routeTree = rootRoute
@@ -136,23 +243,46 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/",
-        "/about",
-        "/login",
-        "/register"
+        "/_layout",
+        "/auth/login",
+        "/auth/register"
       ]
     },
-    "/": {
-      "filePath": "index.tsx"
+    "/_layout": {
+      "filePath": "_layout.tsx",
+      "children": [
+        "/_layout/calendar",
+        "/_layout/clients",
+        "/_layout/properties",
+        "/_layout/reports",
+        "/_layout/"
+      ]
     },
-    "/about": {
-      "filePath": "about.tsx"
+    "/_layout/calendar": {
+      "filePath": "_layout/calendar.tsx",
+      "parent": "/_layout"
     },
-    "/login": {
-      "filePath": "login.tsx"
+    "/_layout/clients": {
+      "filePath": "_layout/clients.tsx",
+      "parent": "/_layout"
     },
-    "/register": {
-      "filePath": "register.tsx"
+    "/_layout/properties": {
+      "filePath": "_layout/properties.tsx",
+      "parent": "/_layout"
+    },
+    "/_layout/reports": {
+      "filePath": "_layout/reports.tsx",
+      "parent": "/_layout"
+    },
+    "/auth/login": {
+      "filePath": "auth/login.tsx"
+    },
+    "/auth/register": {
+      "filePath": "auth/register.tsx"
+    },
+    "/_layout/": {
+      "filePath": "_layout/index.tsx",
+      "parent": "/_layout"
     }
   }
 }
